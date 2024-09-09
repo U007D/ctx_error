@@ -1,10 +1,17 @@
-use crate::shared_const::*;
-use thiserror::Error;
+pub mod sub;
 
-pub type TestResult<T, E = TestError> = core::result::Result<T, E>;
+use crate::shared_const::msg::*;
+use thiserror::Error;
+use crate::ctx_error;
+
+pub type TestResult<T, E = CtxError> = core::result::Result<T, E>;
 
 #[derive(Debug, Error)]
 pub enum TestError {
-    #[error("TestError::Io: {}: {:?}: ", msg::ERR_IO, 0)]
+    #[error("TestError::Io: {ERR_IO}: {_0:?}")]
     Io(#[from] std::io::Error),
+    #[error("TestError:Sub: {_0:?}")]
+    Sub(#[from] sub::TestError),
 }
+
+ctx_error!(TestError);
