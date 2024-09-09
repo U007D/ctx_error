@@ -2,7 +2,7 @@
 mod unit_tests;
 
 #[macro_export]
-macro_rules! ctx_error {
+macro_rules! generate_ctx_error {
     ($err_type:ty) => {
         use core::{fmt::{Display, Formatter, Result as FmtResult},
                    panic::Location,
@@ -60,5 +60,36 @@ macro_rules! ctx_error {
                        error: error.into() }
             }
         }
+    };
+}
+
+#[macro_export]
+macro_rules! generate_ctx_error_from_impl {
+    ($fq_parent_ctx_err_type:ty) => {
+        impl From<CtxError> for $fq_parent_ctx_err_type
+            where <CtxError as ICtxError>::Error:
+                      Into<<$fq_parent_ctx_err_type as ICtxError>::Error>,
+        {
+            #[track_caller]
+            fn from(ctx_error: CtxError) -> Self {
+                let (location, context, backtrace, error) = ctx_error.parts();
+                Self { location,
+                       context,
+                       backtrace,
+                       error: error.into() }
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! ctx_error {
+    ($err_type:ty) => {
+        $crate::generate_ctx_error!($err_type);
+    };
+
+    ($err_type:ty, $fq_parent_ctx_err_type:ty) => {
+        $crate::generate_ctx_error!($err_type);
+        $crate::generate_ctx_error_from_impl!($fq_parent_ctx_err_type);
     };
 }

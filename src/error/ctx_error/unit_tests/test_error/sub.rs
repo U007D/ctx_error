@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::ctx_error;
+use crate::error::ctx_error;
 
 pub type TestResult<T, E = CtxError> = core::result::Result<T, E>;
 
@@ -10,4 +10,4 @@ pub enum TestError {
     SubTestError,
 }
 
-ctx_error!(TestError);
+ctx_error!(TestError, super::CtxError);

@@ -1,8 +1,8 @@
 pub mod sub;
 
-use crate::shared_const::msg::*;
 use thiserror::Error;
-use crate::ctx_error;
+
+use crate::{ctx_error, shared_const::msg::*};
 
 pub type TestResult<T, E = CtxError> = core::result::Result<T, E>;
 
@@ -10,7 +10,7 @@ pub type TestResult<T, E = CtxError> = core::result::Result<T, E>;
 pub enum TestError {
     #[error("TestError::Io: {ERR_IO}: {_0:?}")]
     Io(#[from] std::io::Error),
-    #[error("TestError:Sub: {_0:?}")]
+    #[error("TestError::Sub: {_0:?}")]
     Sub(#[from] sub::TestError),
 }
 

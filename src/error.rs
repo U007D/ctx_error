@@ -8,7 +8,6 @@ use thiserror::Error;
             reason = "`shared_const` is designed to be wildcard imported (and is under our \
                       control).")]
 use crate::{ctx_error, r#trait::ResultExt, shared_const::msg::*};
-
 pub type Result<T, E = CtxError> = CoreResult<T, E>;
 
 #[derive(Debug, Error)]
