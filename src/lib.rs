@@ -4,5 +4,3 @@
 pub mod error;
 pub mod shared_const;
 pub mod r#trait;
-
-pub use error::{Error, Result};

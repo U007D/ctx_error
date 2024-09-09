@@ -9,7 +9,7 @@ macro_rules! generate_ctx_error {
                    slice};
         use std::backtrace::Backtrace;
 
-        use $crate::r#trait::ICtxError;
+        use $crate::r#trait::{ICtxError, IResultExt};
 
         #[derive(Debug, Error)]
         pub struct CtxError {
@@ -58,6 +58,17 @@ macro_rules! generate_ctx_error {
                        context: Vec::new(),
                        backtrace: Backtrace::capture(),
                        error: error.into() }
+            }
+        }
+
+        impl<T> IResultExt<T, $err_type, CtxError> for Result<T, $err_type> {
+            #[track_caller]
+            fn append_ctx<TString>(self, s: TString) -> Result<T, CtxError>
+                where TString: Into<String>, {
+                self.map_err(|error| CtxError { location: Location::caller(),
+                                                context: vec![s.into()],
+                                                backtrace: Backtrace::capture(),
+                                                error: error.into() })
             }
         }
     };

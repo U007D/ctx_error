@@ -9,7 +9,7 @@ pub struct ExpectedLocation {
 
 impl ExpectedLocation {
     #[track_caller]
-    pub fn new(line_offset: i32, column: u32) -> Self {
+    pub fn new(line: u32, column: u32) -> Self {
         let location = Location::caller();
         let file = {
             let mut tmp_path = Path::new(location.file()).parent()
@@ -17,12 +17,9 @@ impl ExpectedLocation {
                                                          .to_str()
                                                          .unwrap_or("")
                                                          .to_string();
-            tmp_path.push_str(".rs");
+            tmp_path.push_str("/utils/functions.rs");
             tmp_path
         };
-        let line = u32::try_from(i64::from(location.line()).checked_add(i64::from(line_offset))
-                                                           .unwrap()).unwrap();
-
         Self { file, line, column }
     }
 
