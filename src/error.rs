@@ -17,17 +17,3 @@ pub enum Error {
 }
 
 ctx_error!(Error);
-
-// impl<T, E, TCtxError> IResultExt<T, E, TCtxError> for CoreResult<T, E>
-//     where E: CoreError + Into<TCtxError>,
-//           TCtxError: ICtxError,
-// {
-//     fn append_ctx<TString>(self, s: TString) -> CoreResult<T, TCtxError>
-//         where TString: Into<String>, {
-//         self.map_err(|error| {
-//                 let mut ctx_error = error.into();
-//                 ctx_error.append_ctx(s);
-//                 ctx_error
-//             })
-//     }
-// }

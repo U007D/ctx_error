@@ -1,13 +1,13 @@
 [package]
-authors = ["Brad Gibson <u007d@humanenginuity.com>"]
+authors = ["Brad Gibson <u007d@surus.com>"]
 categories = []
-description = "<describe crate here>"
+description = "Ergonomic, static, contextual errors in Rust."
 edition = "2021"
 keywords = []
 license = "MIT OR Apache-2.0"
-name = "ctx_error_concept2"
+name = "ctx_error"
 readme = "README.md"
-repository = "https://github.com/u007d/ctx_error_concept2"
+repository = "https://github.com/surus-inc/lab-ctx_error"
 version = "0.1.0"
 
 [lib]

@@ -2,9 +2,19 @@
 mod unit_tests;
 
 #[macro_export]
-macro_rules! generate_ctx_error {
+macro_rules! ctx_error {
     ($err_type:ty) => {
-        use core::{fmt::{Display, Formatter, Result as FmtResult},
+        $crate::ctx_error!(__GENERATE_CTX_ERROR $err_type);
+    };
+
+    ($err_type:ty, $fq_parent_ctx_err_type:ty) => {
+        $crate::ctx_error!(__GENERATE_CTX_ERROR $err_type);
+        $crate::ctx_error!(__GENERATE_CTX_ERROR_FROM_IMPL $fq_parent_ctx_err_type);
+    };
+
+    // For internal use by `ctx_error!()` macro only
+    (__GENERATE_CTX_ERROR $err_type:ty) => {
+        use core::{error::Error as CoreError, fmt::{Display, Formatter, Result as FmtResult},
                    panic::Location,
                    slice};
         use std::backtrace::Backtrace;
@@ -61,7 +71,8 @@ macro_rules! generate_ctx_error {
             }
         }
 
-        impl<T> IResultExt<T, $err_type, CtxError> for Result<T, $err_type> {
+        impl<T, E> IResultExt<T, E, CtxError> for Result<T, E>
+         where E: CoreError + Into<$err_type> {
             #[track_caller]
             fn append_ctx<TString>(self, s: TString) -> Result<T, CtxError>
                 where TString: Into<String>, {
@@ -72,11 +83,9 @@ macro_rules! generate_ctx_error {
             }
         }
     };
-}
 
-#[macro_export]
-macro_rules! generate_ctx_error_from_impl {
-    ($fq_parent_ctx_err_type:ty) => {
+    // For internal use by `ctx_error!()` macro only
+    (__GENERATE_CTX_ERROR_FROM_IMPL $fq_parent_ctx_err_type:ty) => {
         impl From<CtxError> for $fq_parent_ctx_err_type
             where <CtxError as ICtxError>::Error:
                       Into<<$fq_parent_ctx_err_type as ICtxError>::Error>,
@@ -90,17 +99,5 @@ macro_rules! generate_ctx_error_from_impl {
                        error: error.into() }
             }
         }
-    };
-}
-
-#[macro_export]
-macro_rules! ctx_error {
-    ($err_type:ty) => {
-        $crate::generate_ctx_error!($err_type);
-    };
-
-    ($err_type:ty, $fq_parent_ctx_err_type:ty) => {
-        $crate::generate_ctx_error!($err_type);
-        $crate::generate_ctx_error_from_impl!($fq_parent_ctx_err_type);
     };
 }
