@@ -47,13 +47,6 @@ opt-level = 0
 rpath = false
 
 [lints.rust]
-# Uncomment before ship to reconcile use of possibly redundant crates, debug remnants, missing
-# license files and more
-#blanket_clippy_restriction_lints = "allow"
-#implicit_return = "allow"
-#cargo = "warn"
-#restriction = "warn"
-
 # To use the `unsafe` keyword, do not remove the `unsafe_code = "forbid"` entry.
 # Instead, prefer to change it to `unsafe_code = "deny"` + opt-in with local use of
 # `#[allow(unsafe_code)]`'s on an as needed basis.
@@ -64,6 +57,10 @@ rust_2018_idioms = { level = "warn", priority = -1 }
 
 # Uncomment before ship to reconcile use of possibly redundant crates, debug remnants, missing
 # license files and more
+#blanket_clippy_restriction_lints = "allow"
+#implicit_return = "allow"
+#cargo = "warn"
+#restriction = "warn"
 #missing_docs = "warn"
 #warnings = "deny"
 
@@ -91,5 +88,6 @@ missing_errors_doc = "allow"
 module_name_repetitions = "allow"
 obfuscated_if_else = "allow"
 similar_names = "allow"
+too_long_first_doc_paragraph = "allow"
 unnecessary_wraps = "allow"
 wildcard_imports = "deny"

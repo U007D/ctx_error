@@ -21,13 +21,16 @@ macro_rules! ctx_error {
 
         use $crate::r#trait::{ICtxError, IResultExt};
 
+        // TODO:
+        //   * Figure out how to make `thiserror` import hygenic (avoid conflict with caller's scope)
+        //   * Use `#[no_std]`-compatible `thiserror` (NB: `thiserror-no-std` does not seem to work)
         #[derive(Debug, Error)]
         pub struct CtxError {
-            location: &'static Location<'static>,
-            context: Vec<String>,
-            backtrace: Backtrace,
+            pub(super) location: &'static Location<'static>,
+            pub(super) context: Vec<String>,
+            pub(super) backtrace: Backtrace,
             #[source]
-            error: <Self as ICtxError>::Error,
+            pub(super) error: <Self as ICtxError>::Error,
         }
 
         impl Display for CtxError {
@@ -71,7 +74,7 @@ macro_rules! ctx_error {
             }
         }
 
-        impl<T, E> IResultExt<T, E, CtxError> for Result<T, E>
+        impl<T, E> IResultExt<CtxError, T, E> for Result<T, E>
          where E: CoreError + Into<$err_type> {
             #[track_caller]
             fn append_ctx<TString>(self, s: TString) -> Result<T, CtxError>

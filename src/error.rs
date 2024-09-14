@@ -1,5 +1,3 @@
-mod ctx_error;
-
 use core::result::Result as CoreResult;
 
 use thiserror::Error;

@@ -1,6 +1,6 @@
 use std::fs::File;
-use lib::{self, error::Result};
-use lib::r#trait::IResultExt;
+
+use lib::{self, error::Result, r#trait::IResultExt};
 
 fn foo() -> Result<()> {
     const FILENAME: &str = "does not exist.txt";
