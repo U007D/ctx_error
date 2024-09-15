@@ -14,7 +14,7 @@ macro_rules! ctx_error {
 
     // For internal use by `ctx_error!()` macro only
     (__GENERATE_CTX_ERROR $err_type:ty) => {
-        use core::{error::Error as CoreError, fmt::{Display, Formatter, Result as FmtResult},
+        use core::{fmt::{Display, Formatter, Result as FmtResult},
                    panic::Location,
                    slice};
         use std::backtrace::Backtrace;
@@ -40,6 +40,7 @@ macro_rules! ctx_error {
         impl ICtxError for CtxError {
             type Error = $err_type;
 
+            #[track_caller]
             fn append_ctx<TString>(&mut self, s: TString) -> &mut Self
                 where TString: Into<String>, {
                 let s = s.into();
@@ -74,15 +75,10 @@ macro_rules! ctx_error {
             }
         }
 
-        impl<T, E> IResultExt<CtxError, T, E> for Result<T, E>
-         where E: CoreError + Into<$err_type> {
+        impl<T> IResultExt<CtxError, T> for Result<T, CtxError> {
             #[track_caller]
-            fn append_ctx<TString>(self, s: TString) -> Result<T, CtxError>
-                where TString: Into<String>, {
-                self.map_err(|error| CtxError { location: Location::caller(),
-                                                context: vec![s.into()],
-                                                backtrace: Backtrace::capture(),
-                                                error: error.into() })
+            fn append_ctx<TString>(self, s: TString) -> Self where TString: Into<String> {
+                    self.map_err(|mut ctx_err| { ctx_err.append_ctx(s); ctx_err } )
             }
         }
     };

@@ -1,6 +1,6 @@
 use core::result::Result as CoreResult;
 
-use lib::error::ctx_error;
+use lib::ctx_error;
 use thiserror::Error;
 
 pub type Result<T, E = CtxError> = CoreResult<T, E>;
