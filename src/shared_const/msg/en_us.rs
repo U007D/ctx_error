@@ -1,6 +1,6 @@
 //! `en_us` (U.S. English) module for this crate's `const` messages.  This enables the localization
 //! technique of resourcing end-user-facing messages in a separate file from the code.
-#![expect(missing_docs,
+#![allow(missing_docs,
           reason = "These string consts used to output messages to the user, per this module's \
                     documentation.")]
 pub const ERR_IO: &str = "Error performing I/O";

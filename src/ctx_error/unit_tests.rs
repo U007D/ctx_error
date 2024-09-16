@@ -1,11 +1,5 @@
-#![allow(clippy::needless_collect, clippy::unwrap_used)]
+#![allow(missing_docs)]
 
-mod ctx_error_append_ctx;
-mod from_ctx_error;
-mod from_error;
-mod result_ext_append_ctx;
-mod utils;
-
-#[allow(unused_imports)]
-use super::*;
-use crate::r#trait::ICtxError;
+mod one_hop_conversion;
+mod two_hop_conversion;
+mod two_hop_with_user_context;
