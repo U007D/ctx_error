@@ -1,6 +1,10 @@
 #[cfg(test)]
 mod unit_tests;
 
+use std::backtrace::Backtrace;
+use std::panic::Location;
+use crate::{error::CtxError, r#trait::ICtxError};
+
 #[macro_export]
 macro_rules! ctx_error {
     ($err_type:ty) => {
@@ -41,7 +45,7 @@ macro_rules! ctx_error {
             type Error = $err_type;
 
             #[track_caller]
-            fn append_ctx<TString>(&mut self, s: TString) -> &mut Self
+            fn append_ctx<TString>(mut self, s: TString) -> Self
                 where TString: Into<String>, {
                 let s = s.into();
                 self.context.push(s);
@@ -65,20 +69,32 @@ macro_rules! ctx_error {
             }
         }
 
-        impl<TError> From<TError> for CtxError where TError: Into<$err_type>, {
+        // impl<TError> From<TError> for CtxError where TError: Into<$err_type>, {
+        //     #[track_caller]
+        //     fn from(error: TError) -> Self {
+        //         Self { location: Location::caller(),
+        //                context: Vec::new(),
+        //                backtrace: Backtrace::capture(),
+        //                error: error.into() }
+        //     }
+        // }
+        impl<TError> From<TError> for CtxError where TError: Into<<CtxError as ICtxError>::Error>, {
             #[track_caller]
             fn from(error: TError) -> Self {
                 Self { location: Location::caller(),
-                       context: Vec::new(),
-                       backtrace: Backtrace::capture(),
-                       error: error.into() }
+                    context: Vec::new(),
+                    backtrace: Backtrace::capture(),
+                    error: error.into() }
             }
         }
 
         impl<T> IResultExt<CtxError, T> for Result<T, CtxError> {
             #[track_caller]
             fn append_ctx<TString>(self, s: TString) -> Self where TString: Into<String> {
-                    self.map_err(|mut ctx_err| { ctx_err.append_ctx(s); ctx_err } )
+                match self {
+                    Err(mut ctx_error) => Err(ctx_error.append_ctx(s)),
+                    _ => self,
+                }
             }
         }
     };

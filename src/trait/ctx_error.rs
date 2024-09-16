@@ -11,8 +11,9 @@ use crate::shared_const::msg::*;
 pub trait ICtxError: Error {
     type Error: Error;
 
+    #[must_use]
     #[track_caller]
-    fn append_ctx<TString>(&mut self, s: TString) -> &mut Self
+    fn append_ctx<TString>(self, s: TString) -> Self
         where TString: Into<String>;
 
     #[must_use]
