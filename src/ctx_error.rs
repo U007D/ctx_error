@@ -1,11 +1,16 @@
 #[cfg(test)]
 mod unit_tests;
 
-use std::backtrace::Backtrace;
-use std::panic::Location;
-use crate::{error::CtxError, r#trait::ICtxError};
-
 #[macro_export]
+/// This macro accepts an error type (`$err_type`) and optionally a "fully-qualified" parent
+/// contextual error type (`$fq_parent_ctx_err_type`).
+///
+/// The macro constructs a `CtxError` contextual error type and a `From` impl from the specified
+/// error type (`$err_type`) to this `CtxError`.
+///
+/// When defining a `CtxError` in a subdomain, a second parameter specifying the parent `CtxError`
+/// may be provided.  This will construct the `CtxError` and `From` impl as per above *plus* another
+/// `From` impl to construct a parent `CtxError` from a `CtxError`.
 macro_rules! ctx_error {
     ($err_type:ty) => {
         $crate::ctx_error!(__GENERATE_CTX_ERROR $err_type);
@@ -23,7 +28,7 @@ macro_rules! ctx_error {
                    slice};
         use std::backtrace::Backtrace;
 
-        use $crate::r#trait::{ICtxError, IResultExt};
+        use $crate::{ICtxError, IResultExt};
 
         // TODO:
         //   * Figure out how to make `thiserror` import hygenic (avoid conflict with caller's scope)
@@ -69,34 +74,47 @@ macro_rules! ctx_error {
             }
         }
 
-        // impl<TError> From<TError> for CtxError where TError: Into<$err_type>, {
-        //     #[track_caller]
-        //     fn from(error: TError) -> Self {
-        //         Self { location: Location::caller(),
-        //                context: Vec::new(),
-        //                backtrace: Backtrace::capture(),
-        //                error: error.into() }
-        //     }
-        // }
         impl<TError> From<TError> for CtxError where TError: Into<<CtxError as ICtxError>::Error>, {
             #[track_caller]
             fn from(error: TError) -> Self {
                 Self { location: Location::caller(),
-                    context: Vec::new(),
-                    backtrace: Backtrace::capture(),
-                    error: error.into() }
+                       context: Vec::new(),
+                       backtrace: Backtrace::capture(),
+                       error: error.into() }
+            }
+        }
+
+        impl<T, E> IResultExt<CtxError, T> for Result<T, E> where E: Into<$err_type> {
+            #[track_caller]
+            fn append_ctx<TString>(self, s: TString) -> Result<T, CtxError> where TString: Into<String> {
+                // Note: conversion using closure returns wrong `Location`
+                //       (`std` bug or incomplete `#[track_caller]` impl?)
+                // self.map_err(|error| CtxError {
+                //         location: Location::caller(),
+                //         context: vec![s.into()],
+                //         backtrace: Backtrace::capture(),
+                //         error: error.into()
+                //     })
+
+                match self {
+                    Err(error) => Err(CtxError {
+                        location: Location::caller(),
+                        context: vec![s.into()],
+                        backtrace: Backtrace::capture(),
+                        error: error.into()
+                    }),
+                    Ok(t) => Ok(t),
+                }
             }
         }
 
         impl<T> IResultExt<CtxError, T> for Result<T, CtxError> {
             #[track_caller]
             fn append_ctx<TString>(self, s: TString) -> Self where TString: Into<String> {
-                match self {
-                    Err(mut ctx_error) => Err(ctx_error.append_ctx(s)),
-                    _ => self,
-                }
+                self.map_err(|ctx_error| ctx_error.append_ctx(s.into()))
             }
         }
+
     };
 
     // For internal use by `ctx_error!()` macro only

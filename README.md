@@ -26,7 +26,8 @@ emitted `Error`, not including the time to understand, fix and ship/redeploy the
 `ctx_error` is designed, with proper use, to provide the necessary context with the `Error`, to
 increase the speed at which a bugfix can be implemented.
 
-This library is `#[no_std]` compatible.  Compile with `cargo build --no-default-features` to build
+This library ~~is~~ *can be updated to be* `#[no_std]` compatible (this work has not yet been done).  
+Compile with `cargo build --no-default-features` to build
 in `#[no_std]` environments.  When compiled for `#[no_std]`, `ctx_error` will no longer support
 `Backtrace`s (a `std` feature) or user context (`append_ctx()`)--user context is implemented as a
 `Vec<String>` (also a `std` feature) to support user context from multiple levels of the call

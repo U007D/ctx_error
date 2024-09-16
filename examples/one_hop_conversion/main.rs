@@ -1,17 +1,20 @@
 #![feature(error_generic_member_access)]
+#![allow(missing_docs)]
 
 mod error;
 
 use std::fs::File;
 
+use error::Result;
+
 #[termination::display]
-fn main() -> error::Result<()> {
+fn main() -> Result<()> {
     failing_file_open()?;
 
     Ok(())
 }
 
-fn failing_file_open() -> error::sub::Result<File> {
+fn failing_file_open() -> Result<File> {
     const NON_EXISTENT_FILE: &str = "non-existent file.txt";
 
     File::open(NON_EXISTENT_FILE)?;

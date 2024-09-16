@@ -32,7 +32,8 @@
 
 #![feature(error_generic_member_access)]
 
-pub mod ctx_error;
-pub mod error;
+mod ctx_error;
 pub mod shared_const;
-pub mod r#trait;
+mod r#trait;
+
+pub use r#trait::{ICtxError, IResultExt};

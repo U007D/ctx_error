@@ -1,4 +1,4 @@
-use core::{error::Error,
+use core::{error::Error as CoreError,
            fmt::{Formatter, Result as FmtResult},
            slice};
 use std::backtrace::{Backtrace, BacktraceStatus};
@@ -8,24 +8,41 @@ use bool_ext::BoolExt;
 #[allow(clippy::wildcard_imports)]
 use crate::shared_const::msg::*;
 
-pub trait ICtxError: Error {
-    type Error: Error;
+/// This trait defines the interface for all `CtxError`s.
+pub trait ICtxError: CoreError {
+    /// Specifies the type of `core::error::Error` that the implementing `CtxError` will wrap.
+    type Error: CoreError;
 
     #[must_use]
     #[track_caller]
+    /// This method allows the caller to provide additional user-specified context to a `CtxError`.
+    /// This could help the user understand in what context (e.g. *why*) the code was attempting to
+    /// utilize a resource (e.g. read a file) when a failure occurred.
     fn append_ctx<TString>(self, s: TString) -> Self
         where TString: Into<String>;
 
+    /// Provide (a reference to) the `Location` (filename, line number and column number) where this
+    /// error was first emitted.
     #[must_use]
     fn location(&self) -> &core::panic::Location<'_>;
 
+    /// Provide (a reference to) a `Backtrace` (call stack dump) from where this error was emitted
+    /// up to the program entry point.  Note that the `RUST_BACKTRACE` environment variable must
+    /// be set to `1` for the backtrace to be captured (`RUST_BACKTRACE=1 my_app` is one way to
+    /// enable `Backtrace`s).
     fn backtrace(&self) -> &Backtrace;
 
+    /// Provide an iterator of (references to) `String`s representing all the supplied user-context.
+    /// The order of iteration starts from context provided closest to point of error emission.
     fn context(&self) -> slice::Iter<'_, String>;
 
+    /// Provide a (reference to) the inner `CoreError` that `CtxError` is wrapping.
     #[must_use]
     fn error(&self) -> &Self::Error;
 
+    /// A pretty-printing default `Display` implementation that all instances of `CtxError` can call
+    /// to display `Error` information, `Location` information, user-context and `Backtrace`
+    /// information.
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         let max_digits = self.context()
                              .len()
@@ -63,5 +80,7 @@ pub trait ICtxError: Error {
         write!(f, "{} {MSG_AT} {}\n{context}{backtrace}", self.error(), self.location())
     }
 
+    /// Split this `CtxError` into its key constituent parts: `Location`, user-context
+    /// (`Vec<String`>), `Backtrace` and the wrapped inner `Error` itself.
     fn parts<'a>(self) -> (&'a core::panic::Location<'a>, Vec<String>, Backtrace, Self::Error);
 }
