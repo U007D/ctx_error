@@ -1,18 +1,14 @@
 [package]
-authors = ["Brad Gibson <u007d@humanenginuity.com>"]
-categories = []
-description = "<describe crate here>"
+authors = ["Brad Gibson <u007d@surus.com>"]
+categories = ["development-tools"]
+description = "Ergonomic, static, contextual errors in Rust."
 edition = "2021"
-keywords = []
+keywords = ["error", "thiserror", "static-error", "contextual-error", "context"]
 license = "MIT OR Apache-2.0"
-name = "ctx_error_concept2"
+name = "ctx_error"
 readme = "README.md"
-repository = "https://github.com/u007d/ctx_error_concept2"
+repository = "https://github.com/surus-inc/lab-ctx_error"
 version = "0.1.0"
-
-[lib]
-name = "lib"
-path = "src/lib.rs"
 
 [dependencies]
 bool_ext = "0.7.0"
@@ -47,13 +43,6 @@ opt-level = 0
 rpath = false
 
 [lints.rust]
-# Uncomment before ship to reconcile use of possibly redundant crates, debug remnants, missing
-# license files and more
-#blanket_clippy_restriction_lints = "allow"
-#implicit_return = "allow"
-#cargo = "warn"
-#restriction = "warn"
-
 # To use the `unsafe` keyword, do not remove the `unsafe_code = "forbid"` entry.
 # Instead, prefer to change it to `unsafe_code = "deny"` + opt-in with local use of
 # `#[allow(unsafe_code)]`'s on an as needed basis.
@@ -64,32 +53,56 @@ rust_2018_idioms = { level = "warn", priority = -1 }
 
 # Uncomment before ship to reconcile use of possibly redundant crates, debug remnants, missing
 # license files and more
-#missing_docs = "warn"
-#warnings = "deny"
+missing_docs = "warn"
+warnings = "deny"
 
 [lints.clippy]
+# Uncomment before ship to reconcile use of possibly redundant crates, debug remnants, missing
+# license files and more
+blanket_clippy_restriction_lints = { level = "allow", priority = -2 }
+cargo = { level = "warn", priority = -1 }
+restriction = { level = "warn", priority = -1 }
+
 # Safety-critical application lints
 arithmetic_side_effects = "deny"
+as_conversions = "forbid"
 float_cmp_const = "deny"
 indexing_slicing = "deny"
 pedantic = { level = "deny", priority = -1 }
 unwrap_used = "deny"
 
-all = { level = "warn", priority = -1 }
+all = { level = "warn", priority = -3 }
 nursery = { level = "warn", priority = -1 }
 # End of safety-critical application lints
 
+absolute_paths = "allow"
+allow_attributes = "allow"
 enum_glob_use = "deny"
 enum_variant_names = "allow"
 equatable_if_let = "allow"
+error_impl_error = "allow"
 implicit_return = "allow"
 items-after-statements = "allow"
 iter_nth_zero = "allow"
 match_bool = "allow"
 match-same-arms = "allow"
+min_ident_chars = "allow"
 missing_errors_doc = "allow"
+missing_trait_methods = "allow"
+multiple_crate_versions = "allow"
 module_name_repetitions = "allow"
+needless_borrowed_reference = "allow"
 obfuscated_if_else = "allow"
+pub_use = "allow"
+question_mark_used = "allow"
+ref_patterns = "allow"
+self_named_module_files = "allow"
 similar_names = "allow"
+single_char_lifetime_names = "allow"
+single_call_fn = "allow"
+string_add = "allow"
+too_long_first_doc_paragraph = "allow"
+try_err = "allow"
 unnecessary_wraps = "allow"
+unreachable = "allow"
 wildcard_imports = "deny"

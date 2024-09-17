@@ -1,12 +1,8 @@
-pub const ERR_BAD_ARG_COUNT: &str = "Incorrect number of arguments received";
-pub const ERR_ARG_NOT_CONVERTIBLE_TO_UTF_8: &str =
-    "Error: supplied command-line argument not convertible to UTF-8";
-pub const ERR_ARG: &str = "Error in supplied command-line arguments";
-pub const ERR_ARG_PARSE: &str = "Error parsing supplied command-line arguments";
-pub const ERR_FILE_CREATE: &str = "An error occurred attempting to create a file";
-pub const ERR_FILE_OPEN: &str = "An error occurred attempting to open a file";
-pub const ERR_FILE_READ: &str = "An error occurred performing file read I/O";
-pub const ERR_FILE_WRITE: &str = "An error occurred performing file write I/O";
+//! `en_us` (U.S. English) module for this crate's `const` messages.  This enables the localization
+//! technique of resourcing end-user-facing messages in a separate file from the code.
+#![allow(missing_docs,
+         reason = "These string consts used to output messages to the user, per this module's \
+                   documentation.")]
 pub const ERR_IO: &str = "Error performing I/O";
 
 pub const MSG_AT: &str = "at";
