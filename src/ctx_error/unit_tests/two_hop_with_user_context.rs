@@ -2,7 +2,8 @@
 
 mod error;
 
-use std::{cell::OnceCell, fs::File, io::ErrorKind, sync::Mutex};
+use core::cell::OnceCell;
+use std::{fs::File, io::ErrorKind, sync::Mutex};
 
 use assert2::{assert, let_assert};
 use error::{Error, Result};
@@ -18,7 +19,8 @@ static ERROR_LINE: Mutex<OnceCell<u32>> = Mutex::new(OnceCell::new());
 fn returns_root_ctx_error_and_user_context() {
     // Given
     let ((expected_file, expected_column), expected_user_context) =
-        ((file!(), 35), vec![String::from(USER_CONTEXT_1), String::from(USER_CONTEXT_2)].into_iter());
+        ((file!(), 35),
+         vec![String::from(USER_CONTEXT_1), String::from(USER_CONTEXT_2)].into_iter());
     let expected_sub_error_kind = ErrorKind::NotFound;
 
     // When
@@ -37,14 +39,14 @@ fn returns_root_ctx_error_and_user_context() {
     assert!(ctx_error.context().cloned().eq(expected_user_context));
 
     // Check error
-    let_assert!(Error::SubDomain(error::sub_domain::Error::Io(_)) = ctx_error.error());
+    let_assert!(&Error::SubDomain(error::sub_domain::Error::Io(_)) = ctx_error.error());
 }
 
 fn returns_sub_domain_error(expected_sub_error_kind: ErrorKind) -> Result<File> {
     let sub_domain_ctx_error = failing_file_open().unwrap_err();
 
     // Check error
-    let_assert!(error::sub_domain::Error::Io(std_io_error) = sub_domain_ctx_error.error());
+    let_assert!(&error::sub_domain::Error::Io(ref std_io_error) = sub_domain_ctx_error.error());
     assert!(std_io_error.kind() == expected_sub_error_kind);
 
     Err(sub_domain_ctx_error).append_ctx(USER_CONTEXT_2)?;

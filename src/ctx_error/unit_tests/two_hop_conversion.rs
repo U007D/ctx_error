@@ -1,8 +1,9 @@
-#![allow(clippy::unwrap_used, missing_docs)]
+#![allow(clippy::unwrap_used, missing_docs, reason = "Not strictly required for unit tests.")]
 
 mod error;
 
-use std::{cell::OnceCell, fs::File, io::ErrorKind, sync::Mutex};
+use core::cell::OnceCell;
+use std::{fs::File, io::ErrorKind, sync::Mutex};
 
 use assert2::{assert, let_assert};
 use error::{Error, Result};
@@ -34,14 +35,15 @@ fn returns_root_ctx_error() {
     assert!(ctx_error.context().cloned().eq(expected_user_context));
 
     // Check error
-    let_assert!(Error::SubDomain(error::sub_domain::Error::Io(_)) = ctx_error.error());
+    let_assert!(&Error::SubDomain(error::sub_domain::Error::Io(_)) = ctx_error.error());
 }
 
+#[allow(clippy::panic_in_result_fn)]
 fn returns_sub_domain_error(expected_sub_error_kind: ErrorKind) -> Result<File> {
     let sub_domain_ctx_error = failing_file_open().unwrap_err();
 
     // Check error
-    let_assert!(error::sub_domain::Error::Io(std_io_error) = sub_domain_ctx_error.error());
+    let_assert!(&error::sub_domain::Error::Io(ref std_io_error) = sub_domain_ctx_error.error());
     assert!(std_io_error.kind() == expected_sub_error_kind);
 
     Err(sub_domain_ctx_error)?;

@@ -1,11 +1,15 @@
+//! Module containing `CtxError`'s trait definition.
+
 use core::{error::Error as CoreError,
            fmt::{Formatter, Result as FmtResult},
+           panic::Location,
            slice};
 use std::backtrace::{Backtrace, BacktraceStatus};
 
 use bool_ext::BoolExt;
 
-#[allow(clippy::wildcard_imports)]
+#[allow(clippy::wildcard_imports,
+            reason = "`shared_const` items are not intended to be tracked individually.")]
 use crate::shared_const::msg::*;
 
 /// This trait defines the interface for all `CtxError`s.
@@ -24,7 +28,7 @@ pub trait ICtxError: CoreError {
     /// Provide (a reference to) the `Location` (filename, line number and column number) where this
     /// error was first emitted.
     #[must_use]
-    fn location(&self) -> &core::panic::Location<'_>;
+    fn location(&self) -> &Location<'_>;
 
     /// Provide (a reference to) a `Backtrace` (call stack dump) from where this error was emitted
     /// up to the program entry point.  Note that the `RUST_BACKTRACE` environment variable must
@@ -40,6 +44,7 @@ pub trait ICtxError: CoreError {
     #[must_use]
     fn error(&self) -> &Self::Error;
 
+    #[inline]
     /// A pretty-printing default `Display` implementation that all instances of `CtxError` can call
     /// to display `Error` information, `Location` information, user-context and `Backtrace`
     /// information.
@@ -82,5 +87,5 @@ pub trait ICtxError: CoreError {
 
     /// Split this `CtxError` into its key constituent parts: `Location`, user-context
     /// (`Vec<String`>), `Backtrace` and the wrapped inner `Error` itself.
-    fn parts<'a>(self) -> (&'a core::panic::Location<'a>, Vec<String>, Backtrace, Self::Error);
+    fn parts<'a>(self) -> (&'a Location<'a>, Vec<String>, Backtrace, Self::Error);
 }

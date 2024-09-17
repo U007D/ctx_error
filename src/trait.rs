@@ -1,3 +1,5 @@
+//! Namespace container for this crate's trait definitions.
+
 mod ctx_error;
 mod result_ext;
 

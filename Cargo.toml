@@ -61,7 +61,7 @@ warnings = "deny"
 # license files and more
 blanket_clippy_restriction_lints = { level = "allow", priority = -2 }
 cargo = { level = "warn", priority = -1 }
-#restriction = { level = "warn", priority = -1 }
+restriction = { level = "warn", priority = -1 }
 
 # Safety-critical application lints
 arithmetic_side_effects = "deny"
@@ -75,22 +75,34 @@ all = { level = "warn", priority = -3 }
 nursery = { level = "warn", priority = -1 }
 # End of safety-critical application lints
 
+absolute_paths = "allow"
+allow_attributes = "allow"
 enum_glob_use = "deny"
 enum_variant_names = "allow"
 equatable_if_let = "allow"
+error_impl_error = "allow"
 implicit_return = "allow"
 items-after-statements = "allow"
 iter_nth_zero = "allow"
 match_bool = "allow"
 match-same-arms = "allow"
+min_ident_chars = "allow"
 missing_errors_doc = "allow"
+missing_trait_methods = "allow"
 multiple_crate_versions = "allow"
 module_name_repetitions = "allow"
+needless_borrowed_reference = "allow"
 obfuscated_if_else = "allow"
 pub_use = "allow"
+question_mark_used = "allow"
+ref_patterns = "allow"
 self_named_module_files = "allow"
 similar_names = "allow"
 single_char_lifetime_names = "allow"
+single_call_fn = "allow"
+string_add = "allow"
 too_long_first_doc_paragraph = "allow"
+try_err = "allow"
 unnecessary_wraps = "allow"
+unreachable = "allow"
 wildcard_imports = "deny"

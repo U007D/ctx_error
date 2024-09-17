@@ -1,7 +1,8 @@
 use core::result::Result as CoreResult;
 
-use crate::ctx_error;
 use thiserror::Error;
+
+use crate::ctx_error;
 
 pub type Result<T, E = CtxError> = CoreResult<T, E>;
 #[derive(Debug, Error)]

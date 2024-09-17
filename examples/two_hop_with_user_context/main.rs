@@ -1,10 +1,5 @@
-//! Ergonomic, static, contextual errors in Rust.
-//!
-//! In a (typically larger) Rust program which is handling errors correctly, by default Rust does not
-//! capture the location (filename, line number and column number) where an `Error` was first emitted.
-//! `ctx_error` addresses this issue with a minimal ergonomic hit (requires changing at most 3 lines
-//! per error module).
-
+#![allow(missing_docs, clippy::missing_docs_in_private_items, reason = "Not strictly required for examples.")]
+#![allow(clippy::single_call_fn, reason = "Necessary for example code.")]
 #![feature(error_generic_member_access)]
 
 mod error;
