@@ -33,6 +33,12 @@ macro_rules! ctx_error {
         // TODO:
         //   * Figure out how to make `thiserror` import hygenic (avoid conflict with caller's scope)
         //   * Use `#[no_std]`-compatible `thiserror` (NB: `thiserror-no-std` does not seem to work)
+        /// Generates a local `CtxError`.  A `CtxError` is a wrapper over the local error type
+        /// (`$err_type`) which also includes `Location` (file, line and column number), user-
+        /// context and optional `Backtrace` information.  A converter is also created for this type
+        /// allowing conversion from the local (non-contextual) `Error` type to this `CtxError`.  A
+        /// second converter is optionally created to convert this `CtxError` to its parent
+        /// `CtxError` if the `ctx_error` macro generating this type is provided with a parent type.
         #[derive(Debug, Error)]
         pub struct CtxError {
             pub(super) location: &'static Location<'static>,
