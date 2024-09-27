@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - 'release'
+
+name: Release
+
+jobs:
+  publish:
+    uses: surus-inc/devops-shared_github_ci/.github/workflows/publish.yaml@release
+    secrets:
+      KNOWN_HOSTS_GITHUB: ${{ secrets.KNOWN_HOSTS_GITHUB }}
+      OPEN_VPN_CONFIG: ${{ secrets.OPEN_VPN_CONFIG }}
+      OPEN_VPN_USERNAME: ${{ secrets.OPEN_VPN_USERNAME }}
+      OPEN_VPN_PASSWORD: ${{ secrets.OPEN_VPN_PASSWORD }}
+      SURUS_CARGO_REGISTRY_GIT_SSH_KEY: ${{ secrets.SURUS_CARGO_REGISTRY_GIT_SSH_KEY }}
+      SURUS_CARGO_REGISTRY_TOKEN: ${{ secrets.SURUS_CARGO_REGISTRY_TOKEN }}
