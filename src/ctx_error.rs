@@ -26,13 +26,6 @@ macro_rules! ctx_error {
 
     // For internal use by `ctx_error!()` macro only
     (__GENERATE_CTX_ERROR $err_type:ty) => {
-        use core::{fmt::{Display, Formatter, Result as FmtResult},
-                   panic::Location,
-                   slice};
-        use std::backtrace::Backtrace;
-
-        use $crate::{ICtxError, IResultExt};
-
         // TODO:
         //   * Figure out how to make `thiserror` import hygenic (avoid conflict with caller's scope)
         //   * Use `#[no_std]`-compatible `thiserror` (NB: `thiserror-no-std` does not seem to work)
@@ -44,20 +37,24 @@ macro_rules! ctx_error {
         /// second converter is optionally created to convert this `CtxError` to its parent
         /// `CtxError` if the `ctx_error` macro generating this type is provided with a parent type.
         pub struct CtxError {
-            location: &'static Location<'static>,
+            backtrace: ::std::backtrace::Backtrace,
             context: Vec<String>,
-            backtrace: Backtrace,
             #[source]
-            error: <Self as ICtxError>::Error,
+            error: <Self as $crate::ICtxError>::Error,
+            location: &'static ::core::panic::Location<'static>,
         }
 
-        impl Display for CtxError {
-            fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult { <Self as ICtxError>::fmt(self, f) }
+        impl ::core::fmt::Display for CtxError {
+            #[inline]
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                <Self as $crate::ICtxError>::fmt(self, f)
+            }
         }
 
-        impl ICtxError for CtxError {
+        impl $crate::ICtxError for CtxError {
             type Error = $err_type;
 
+            #[inline]
             #[track_caller]
             fn append_ctx<TString>(mut self, s: TString) -> Self
                 where TString: Into<String>, {
@@ -66,36 +63,52 @@ macro_rules! ctx_error {
                 self
             }
 
-            #[must_use]
-            fn location(&self) -> &core::panic::Location<'_> { self.location }
+            #[inline]
+            fn backtrace(&self) -> &::std::backtrace::Backtrace { &self.backtrace }
 
-            fn backtrace(&self) -> &Backtrace { &self.backtrace }
+            #[inline]
+            fn context(&self) -> ::core::slice::Iter<'_, String> {
+                self.context.iter()
+            }
 
-            fn context(&self) -> slice::Iter<'_, String> { self.context.iter() }
-
-            #[must_use]
+            #[inline]
             fn error(&self) -> &Self::Error { &self.error }
 
+            #[inline]
+            fn location(&self) -> &::core::panic::Location<'_> { self.location }
+
+            #[inline]
             fn parts<'a>(
                 self)
-                -> (&'a core::panic::Location<'a>, Vec<String>, Backtrace, Self::Error) {
+                -> (&'a ::core::panic::Location<'a>,
+                    Vec<String>,
+                    ::std::backtrace::Backtrace,
+                    Self::Error) {
                 (self.location, self.context, self.backtrace, self.error)
             }
         }
 
-        impl<TError> From<TError> for CtxError where TError: Into<<CtxError as ICtxError>::Error>, {
+        impl<TError> ::core::convert::From<TError> for CtxError
+            where TError: ::core::convert::Into<<CtxError as $crate::ICtxError>::Error>,
+        {
+            #[inline]
             #[track_caller]
             fn from(error: TError) -> Self {
-                Self { location: Location::caller(),
+                Self { backtrace: ::std::backtrace::Backtrace::capture(),
                        context: Vec::new(),
-                       backtrace: Backtrace::capture(),
-                       error: error.into() }
+                       error: error.into(),
+                       location: ::core::panic::Location::caller() }
             }
         }
 
-        impl<T, E> IResultExt<CtxError, T> for Result<T, E> where E: Into<$err_type> {
+        impl<T, E> $crate::IResultExt<CtxError, T> for ::core::result::Result<T, E>
+            where E: ::core::convert::Into<$err_type>,
+        {
+            #[inline]
             #[track_caller]
-            fn append_ctx<TString>(self, s: TString) -> Result<T, CtxError> where TString: Into<String> {
+            fn append_ctx<TString>(self, s: TString) -> ::core::result::Result<T, CtxError>
+                where TString: ::core::convert::Into<String>
+            {
                 // Note: conversion using closure returns wrong `Location`
                 //       (`std` bug or incomplete `#[track_caller]` impl?)
                 // self.map_err(|error| CtxError {
@@ -106,39 +119,45 @@ macro_rules! ctx_error {
                 //     })
 
                 match self {
-                    Err(error) => Err(CtxError {
-                        location: Location::caller(),
+                    ::core::result::Result::Err(error) => ::core::result::Result::Err(CtxError {
+                        backtrace: ::std::backtrace::Backtrace::capture(),
                         context: vec![s.into()],
-                        backtrace: Backtrace::capture(),
-                        error: error.into()
+                        error: error.into(),
+                        location: ::core::panic::Location::caller(),
                     }),
-                    Ok(t) => Ok(t),
+                    ::core::result::Result::Ok(t) => ::core::result::Result::Ok(t),
                 }
             }
         }
 
-        impl<T> IResultExt<CtxError, T> for Result<T, CtxError> {
+        impl<T> $crate::IResultExt<CtxError, T> for ::core::result::Result<T, CtxError> {
+            #[inline]
             #[track_caller]
-            fn append_ctx<TString>(self, s: TString) -> Self where TString: Into<String> {
-                self.map_err(|ctx_error| ctx_error.append_ctx(s.into()))
+            fn append_ctx<TString>(self, s: TString) -> Self
+                where TString: ::core::convert::Into<String>
+            {
+                self.map_err(|ctx_error| {
+                    <CtxError as $crate::ICtxError>::append_ctx(ctx_error, s.into())
+                })
             }
         }
-
     };
 
     // For internal use by `ctx_error!()` macro only
     (__GENERATE_CTX_ERROR_FROM_IMPL $fq_parent_ctx_err_type:ty) => {
-        impl From<CtxError> for $fq_parent_ctx_err_type
-            where <CtxError as ICtxError>::Error:
-                      Into<<$fq_parent_ctx_err_type as ICtxError>::Error>,
+        impl ::core::convert::From<CtxError> for $fq_parent_ctx_err_type
+            where <CtxError as $crate::ICtxError>::Error:
+                      ::core::convert::Into<<$fq_parent_ctx_err_type as $crate::ICtxError>::Error>,
         {
+            #[inline]
             #[track_caller]
             fn from(ctx_error: CtxError) -> Self {
-                let (location, context, backtrace, error) = ctx_error.parts();
-                Self { location,
+                let (location, context, backtrace, error) =
+                    <CtxError as $crate::ICtxError>::parts(ctx_error);
+                Self { backtrace,
                        context,
-                       backtrace,
-                       error: error.into() }
+                       error: error.into(),
+                       location }
             }
         }
     };

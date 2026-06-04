@@ -25,11 +25,6 @@ pub trait ICtxError: CoreError {
     fn append_ctx<TString>(self, s: TString) -> Self
         where TString: Into<String>;
 
-    /// Provide (a reference to) the `Location` (filename, line number and column number) where this
-    /// error was first emitted.
-    #[must_use]
-    fn location(&self) -> &Location<'_>;
-
     /// Provide (a reference to) a `Backtrace` (call stack dump) from where this error was emitted
     /// up to the program entry point.  Note that the `RUST_BACKTRACE` environment variable must
     /// be set to `1` for the backtrace to be captured (`RUST_BACKTRACE=1 my_app` is one way to
@@ -64,13 +59,6 @@ pub trait ICtxError: CoreError {
                                           });
                                           let line_number = index.saturating_add(1);
                                           let prefix = format!("  {line_number: >max_digits$}: ");
-                                          #[expect(clippy::arithmetic_side_effects,
-                                                   reason = "`clippy::arithmetic_side_effects` \
-                                                             lint should be `level = deny`.  \
-                                                             String concatenation is sound \
-                                                             (modulo OOM error), since string \
-                                                             concatenation is not arithmetic \
-                                                             and cannot overflow.")]
                                           acc.push_str(&(prefix + context + "\n"));
                                           acc
                                       });
@@ -84,6 +72,11 @@ pub trait ICtxError: CoreError {
             });
         write!(f, "{} {MSG_AT} {}\n{context}{backtrace}", self.error(), self.location())
     }
+
+    /// Provide (a reference to) the `Location` (filename, line number and column number) where this
+    /// error was first emitted.
+    #[must_use]
+    fn location(&self) -> &Location<'_>;
 
     /// Split this `CtxError` into its key constituent parts: `Location`, user-context
     /// (`Vec<String`>), `Backtrace` and the wrapped inner `Error` itself.

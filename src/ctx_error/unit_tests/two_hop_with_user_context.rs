@@ -1,4 +1,4 @@
-#![allow(clippy::unwrap_used, missing_docs)]
+#![allow(clippy::unwrap_used, clippy::unwrap_in_result, missing_docs)]
 
 mod error;
 

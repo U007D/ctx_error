@@ -8,12 +8,12 @@ license = "MIT OR Apache-2.0"
 name = "ctx_error"
 readme = "README.md"
 repository = "https://github.com/surus-inc/lab-ctx_error"
-version = "0.1.0"
+version = "0.2.0"
 
 [dependencies]
 bool_ext = "0.7.0"
 termination = "0.1.2"
-thiserror = "1.0.63"
+thiserror = "^2"
 
 [dev-dependencies]
 assert2 = "0.3.15"

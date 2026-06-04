@@ -1,4 +1,7 @@
-#![allow(clippy::unwrap_used, missing_docs, reason = "Not strictly required for unit tests.")]
+#![allow(clippy::unwrap_used,
+         clippy::unwrap_in_result,
+         missing_docs,
+         reason = "Not strictly required for unit tests.")]
 
 mod error;
 
