@@ -5,7 +5,7 @@
 /// convertible into a local error type and 2) that error type can be converted to a `CtxError`.
 pub trait IResultExt<TDstError, T> {
     /// `append_ctx` makes `CtxError`s feel transparent to the developer, allowing ergonomic
-    /// attachment of context with no boilerplate.
-    fn append_ctx<TString>(self, s: TString) -> Result<T, TDstError>
-        where TString: Into<String>;
+    /// attachment of context to an inner error (if present) with no boilerplate.
+    /// Without `std`, an existing context is retained; otherwise the supplied context is stored.
+    fn append_ctx(self, s: &'static str) -> Result<T, TDstError>;
 }

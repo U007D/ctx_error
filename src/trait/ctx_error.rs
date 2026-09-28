@@ -1,84 +1,79 @@
-//! Module containing `CtxError`'s trait definition.
+//! Interface shared by contextual errors.
 
 use core::{error::Error as CoreError,
            fmt::{Formatter, Result as FmtResult},
            panic::Location,
            slice};
-use std::backtrace::{Backtrace, BacktraceStatus};
 
-use bool_ext::BoolExt;
-
+use crate::conditional_compilation::{Backtrace, Context};
 #[allow(clippy::wildcard_imports,
-            reason = "`shared_const` items are not intended to be tracked individually.")]
+            reason = "Message constants are maintained together for localization.")]
 use crate::shared_const::msg::*;
 
-/// This trait defines the interface for all `CtxError`s.
+/// The interface implemented by every generated `CtxError`.
 pub trait ICtxError: CoreError {
-    /// Specifies the type of `core::error::Error` that the implementing `CtxError` will wrap.
+    /// The underlying error type.
     type Error: CoreError;
 
+    /// Attach a static context string describing why an operation was attempted.
+    ///
+    /// With `std`, every call appends a context. Without `std`, only the first is retained;
+    /// subsequent calls leave it unchanged. An empty string is an attached context, not absence.
     #[must_use]
     #[track_caller]
-    /// This method allows the caller to provide additional user-specified context to a `CtxError`.
-    /// This could help the user understand in what context (e.g. *why*) the code was attempting to
-    /// utilize a resource (e.g. read a file) when a failure occurred.
-    fn append_ctx<TString>(self, s: TString) -> Self
-        where TString: Into<String>;
+    fn append_ctx(self, s: &'static str) -> Self;
 
-    /// Provide (a reference to) a `Backtrace` (call stack dump) from where this error was emitted
-    /// up to the program entry point.  Note that the `RUST_BACKTRACE` environment variable must
-    /// be set to `1` for the backtrace to be captured (`RUST_BACKTRACE=1 my_app` is one way to
-    /// enable `Backtrace`s).
-    fn backtrace(&self) -> &Backtrace;
+    /// Borrow the backtrace captured at error creation.
+    ///
+    /// With `std`, capture is controlled by the standard backtrace environment variables.
+    /// Without `std`, the value is always `None`, with `Infallible` as its uninhabited inner type.
+    fn backtrace(&self) -> &Option<Backtrace>;
 
-    /// Provide an iterator of (references to) `String`s representing all the supplied user-context.
-    /// The order of iteration starts from context provided closest to point of error emission.
-    fn context(&self) -> slice::Iter<'_, String>;
+    /// Iterate over references to the attached static strings, in attachment order.
+    ///
+    /// There may be no contexts. Without `std`, there is at most one.
+    fn context(&self) -> slice::Iter<'_, &'static str>;
 
-    /// Provide a (reference to) the inner `CoreError` that `CtxError` is wrapping.
+    /// Borrow the underlying error.
     #[must_use]
     fn error(&self) -> &Self::Error;
 
+    /// Write the error, original location, contexts and available backtrace to the formatter.
+    ///
+    /// Formatting streams directly to the destination without allocating an intermediate string.
     #[inline]
-    /// A pretty-printing default `Display` implementation that all instances of `CtxError` can call
-    /// to display `Error` information, `Location` information, user-context and `Backtrace`
-    /// information.
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        let max_digits = self.context()
-                             .len()
-                             .saturating_sub(1)
-                             .checked_ilog(10)
-                             .and_then(|log| usize::try_from(log.saturating_add(1)).ok())
-                             .unwrap_or_default();
-        let context =
-            self.context().enumerate().fold(String::new(), |mut acc, (index, context)| {
-                                          (index == 0).and_do(|| {
-                                              acc = format!("{MSG_CONTEXT} ({MSG_DISPLAY_ORDER}: \
-                                                             {MSG_ERROR_ORIGINATION_SITE} -> \
-                                                             {MSG_PROGRAM_ENTRY_POINT}):\n");
-                                          });
-                                          let line_number = index.saturating_add(1);
-                                          let prefix = format!("  {line_number: >max_digits$}: ");
-                                          acc.push_str(&(prefix + context + "\n"));
-                                          acc
-                                      });
-        #[expect(clippy::arithmetic_side_effects,
-                 reason = "`clippy::arithmetic_side_effects` lint should be `level = deny`.  \
-                           String concatenation is sound (modulo OOM error), since string \
-                           concatenation is not arithmetic and cannot overflow.")]
-        let backtrace =
-            (self.backtrace().status() != BacktraceStatus::Disabled).map_or(String::new(), || {
-                String::from(MSG_ERROR_BACKTRACE) + "\n" + &self.backtrace().to_string()
-            });
-        write!(f, "{} {MSG_AT} {}\n{context}{backtrace}", self.error(), self.location())
+        writeln!(f, "{} {MSG_AT} {}", self.error(), self.location())?;
+        let contexts = self.context();
+        if contexts.len() != 0 {
+            let max_digits = usize::try_from(contexts.len()
+                                                     .checked_ilog10()
+                                                     .unwrap_or_default()
+                                                     .saturating_add(1)).unwrap_or(1);
+            writeln!(f,
+                     "{MSG_CONTEXT} ({MSG_DISPLAY_ORDER}: {MSG_ERROR_ORIGINATION_SITE} -> \
+                      {MSG_PROGRAM_ENTRY_POINT}):")?;
+            for (index, context) in contexts.enumerate() {
+                let line_number = index.saturating_add(1);
+                writeln!(f, "  {line_number:>max_digits$}: {context}")?;
+            }
+        }
+        #[cfg(feature = "std")]
+        if let Some(backtrace) = self.backtrace().as_ref() {
+            if backtrace.status() != std::backtrace::BacktraceStatus::Disabled {
+                write!(f, "{MSG_ERROR_BACKTRACE}\n{backtrace}")?;
+            }
+        }
+        Ok(())
     }
 
-    /// Provide (a reference to) the `Location` (filename, line number and column number) where this
-    /// error was first emitted.
+    /// Borrow the location where the underlying error first became contextual.
     #[must_use]
     fn location(&self) -> &Location<'_>;
 
-    /// Split this `CtxError` into its key constituent parts: `Location`, user-context
-    /// (`Vec<String`>), `Backtrace` and the wrapped inner `Error` itself.
-    fn parts<'a>(self) -> (&'a Location<'a>, Vec<String>, Backtrace, Self::Error);
+    /// Consume the error and transfer its underlying error, location, context and backtrace.
+    ///
+    /// Context storage is `Option<Vec<&'static str>>` with `std`, and `Option<&'static str>`
+    /// without it. Transferring these parts does not clone or reallocate the context storage.
+    fn parts<'a>(self) -> (Self::Error, &'a Location<'a>, Context, Option<Backtrace>);
 }

@@ -1,4 +1,6 @@
-#![allow(missing_docs, clippy::missing_docs_in_private_items, reason = "Not strictly required for examples.")]
+#![allow(missing_docs,
+         clippy::missing_docs_in_private_items,
+         reason = "Not strictly required for examples.")]
 #![allow(clippy::single_call_fn, reason = "Necessary for example code.")]
 #![feature(error_generic_member_access)]
 

@@ -1,0 +1,15 @@
+[package]
+name = "ctx-error-consumer-check"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+errors = { package = "ctx_error", path = "../../..", default-features = false }
+
+[features]
+# Deliberately unrelated to the dependency's std feature.
+std = []
+use-std = ["errors/std"]
+
+[workspace]

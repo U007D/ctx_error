@@ -24,14 +24,15 @@
 //! `ctx_error` is designed, with proper use, to provide the necessary context with the `Error`, to
 //! increase the speed at which a bugfix can be implemented.
 //!
-//! This library is `#[no_std]` compatible.  Compile with `cargo build --no-default-features` to
-//! build in `#[no_std]` environments.  When compiled for `#[no_std]`, `ctx_error` will no longer
-//! support `Backtrace`s (a `std` feature) or user context (`append_ctx()`)--user context is
-//! implemented as a `Vec<String>` (also a `std` feature) to support user context from multiple
-//! levels of the call stack.
+//! Both configurations accept `&'static str` context messages. The default `std` feature stores
+//! zero or more messages and supports backtraces. With `default-features = false`, the library
+//! uses neither `std` nor `alloc`: it stores zero or one message, retains the first message when
+//! more are appended, and has no backtrace. No allocator is required.
 
-#![feature(error_generic_member_access)]
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(feature = "std", feature(error_generic_member_access))]
 
+pub mod conditional_compilation;
 mod ctx_error;
 pub mod shared_const;
 mod r#trait;

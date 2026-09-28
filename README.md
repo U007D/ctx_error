@@ -26,12 +26,25 @@ emitted `Error`, not including the time to understand, fix and ship/redeploy the
 `ctx_error` is designed, with proper use, to provide the necessary context with the `Error`, to
 increase the speed at which a bugfix can be implemented.
 
-This library ~~is~~ *can be updated to be* `#[no_std]` compatible (this work has not yet been done).  
-Compile with `cargo build --no-default-features` to build
-in `#[no_std]` environments.  When compiled for `#[no_std]`, `ctx_error` will no longer support
-`Backtrace`s (a `std` feature) or user context (`append_ctx()`)--user context is implemented as a
-`Vec<String>` (also a `std` feature) to support user context from multiple levels of the call
-stack.
+Both configurations accept `&'static str` context messages:
+
+- Default (`std`): zero or more contexts, in attachment order, plus backtrace support.
+- `default-features = false`: `#![no_std]` with no `alloc` dependency or allocator requirement.
+  An error has zero or one context; the first attached context is retained on subsequent calls.
+  An empty string counts as a context. Backtraces are unavailable (`backtrace()` returns `&None`).
+
+```toml
+[dependencies]
+ctx_error = { version = "0.2", default-features = false }
+```
+
+The consuming crate does not need its own `std` feature. The macro uses the features enabled
+on `ctx_error` itself. With `std`, generated errors retain the nightly
+`error_generic_member_access` requirement for backtrace provision. The `no_std` configuration
+does not require that unstable feature.
+
+`context()` borrows an iterator; `parts()` consumes the error and transfers owned storage.
+Formatting writes directly to the formatter without constructing intermediate strings.
 
 ## Usage
 Let's imagine a project layout looking something like this:
@@ -226,7 +239,7 @@ Error Backtrace
 ```
 
 `ctx_error` provides `append_ctx()` method on all `core::result::Result` and all `CtxError`s, so the
-`Error` can easily be associated with arbitrary user context.  Imagine `append_context()` is used in
+`Error` can easily be associated with static string context.  Imagine `append_ctx()` is used in
 `init::config_reader()` as follows:
 
 ```rust
@@ -239,7 +252,7 @@ pub fn config_reader() -> Result<impl Read> where
 {
   // ...
   //                                              v-- new!
-  let config_reader = File::open(config_path).append_ctx(config_path)?;
+  let config_reader = File::open(config_path).append_ctx("Opening the configuration file")?;
   Ok(config_reader)
 }
 ```
@@ -251,7 +264,7 @@ use lib::error::Result;
 
 fn main() -> Result<()> {
     //                                                     v-- new!
-    let config_reader = lib::init::config_reader().append_context("Reading app config")?;
+    let config_reader = lib::init::config_reader().append_ctx("Reading app config")?;
     let app = App::new(reader)?;
     app.run()?;
   
@@ -268,7 +281,7 @@ to (filename is exemplar)
 ```
 No such file or directory (os error 2) at src/init.rs:9:5
 Context (Display order: error origination site -> program entry point):
-  1: config/my_app_config.json
+  1: Opening the configuration file
   2: Reading app config
 ```
 
@@ -276,7 +289,7 @@ or, with `RUST_BACKTRACE=1 cargo run`:
 ```
 No such file or directory (os error 2) at src/init.rs:9:5
 Context (Display order: error origination site -> program entry point):
-  1: config_files/my_app_config.json
+  1: Opening the configuration file
   2: Reading app config
 Error Backtrace
    0: std::backtrace_rs::backtrace::libunwind::trace

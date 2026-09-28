@@ -1,5 +1,5 @@
 [package]
-authors = ["Brad Gibson <u007d@surus.com>"]
+authors = ["Brad Gibson <u007d@humanenginuity.com>"]
 categories = ["development-tools"]
 description = "Ergonomic, static, contextual errors in Rust."
 edition = "2021"
@@ -7,16 +7,16 @@ keywords = ["error", "thiserror", "static-error", "contextual-error", "context"]
 license = "MIT OR Apache-2.0"
 name = "ctx_error"
 readme = "README.md"
-repository = "https://github.com/surus-inc/lab-ctx_error"
-version = "0.2.0"
+repository = "https://github.com/u007d/ctx_error"
+version = "0.3.0"
 
-[dependencies]
-bool_ext = "0.7.0"
+[dev-dependencies]
 termination = "0.1.2"
 thiserror = "^2"
 
-[dev-dependencies]
-assert2 = "0.3.15"
+[features]
+default = ["std"]
+std = []
 
 [profile.dev]
 debug = true
